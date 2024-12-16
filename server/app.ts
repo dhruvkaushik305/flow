@@ -27,13 +27,23 @@ function getCookies(req: Request) {
 }
 
 const middleware = (req: Request, res: Response, next: NextFunction) => {
-  console.log("caught you");
-
-  console.log("the incoming request is at", req.originalUrl);
-
   const cookies = getCookies(req);
 
-  // console.log("the cookies are:", cookies);
+  const incomingRoute = req.originalUrl;
+  const isAuthorized = cookies["authToken"];
+
+  if (isAuthorized) {
+    //login and signup routes shouldn't be allowed
+    if (incomingRoute == "/login" || incomingRoute == "/signup") {
+      return res.redirect("/home");
+    }
+  } else {
+    //home route shouldn't be allowed
+    if (incomingRoute.startsWith("/home")) {
+      return res.redirect("/login");
+    }
+  }
+
   next();
 };
 
