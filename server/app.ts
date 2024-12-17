@@ -16,29 +16,32 @@ function getCookies(req: Request) {
 
   const cookies = headerCookies ? headerCookies.split("; ") : [];
 
-  const cookiesJson: Record<string, string> = {};
+  const cookiesJSON: Record<string, string> = {};
 
   cookies.forEach((cookie) => {
     const [key, value] = cookie.split("=");
-    cookiesJson[key] = value;
+    cookiesJSON[key] = value;
   });
 
-  return cookiesJson;
+  return cookiesJSON;
 }
 
-const middleware = (req: Request, res: Response, next: NextFunction) => {
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const cookies = getCookies(req);
 
   const incomingRoute = req.originalUrl;
-  const isAuthorized = cookies["authToken"];
+
+  const isAuthorized = cookies["userId"] || false;
+
+  console.log("authorization status", isAuthorized);
 
   if (isAuthorized) {
-    //login and signup routes shouldn't be allowed
+    //don't show the login and signup page
     if (incomingRoute == "/login" || incomingRoute == "/signup") {
       return res.redirect("/home");
     }
   } else {
-    //home route shouldn't be allowed
+    //protect the home route
     if (incomingRoute.startsWith("/home")) {
       return res.redirect("/login");
     }
@@ -47,7 +50,7 @@ const middleware = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-app.use(middleware);
+app.use(authMiddleware);
 
 app.use(
   createRequestHandler({
