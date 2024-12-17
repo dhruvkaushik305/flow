@@ -1,3 +1,9 @@
+import { Link } from "react-router";
+
 export default function RootIndex() {
-  return <main>Hello</main>;
+  return (
+    <main>
+      <Link to="/login"> Login here</Link>
+    </main>
+  );
 }
