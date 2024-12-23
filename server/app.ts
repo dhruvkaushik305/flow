@@ -33,7 +33,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
   const isAuthorized = cookies["userId"] || false;
 
-  console.log("authorization status", isAuthorized);
+  // console.log("authorization status", isAuthorized);
 
   if (isAuthorized) {
     //don't show the login and signup page
