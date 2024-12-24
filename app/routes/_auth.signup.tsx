@@ -1,12 +1,20 @@
 import { data, Form, Link } from "react-router";
-// import type { Route } from "./+types/_auth.signup";
-import { useActionData } from "react-router";
+import type { Route } from "./+types/_auth.signup";
 import { redirect } from "react-router";
 import { userCookie } from "~/.server/cookies";
 import { checkEmailId, createNewUser } from "~/.server/models/user";
+import { formatAuthFormError } from "~/utils/formatAuthFormError";
 import { signupSchema } from "~/utils/zodSchema";
 
-export async function action({ request }) {
+type ActionData = Record<string, string> & {
+  existingUser?: string;
+};
+
+interface SignupComponentProps extends Route.ComponentProps {
+  actionData?: ActionData;
+}
+
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const body = {
@@ -18,17 +26,14 @@ export async function action({ request }) {
   const validateInput = signupSchema.safeParse(body);
 
   if (!validateInput.success) {
-    const errorDetails = JSON.parse(validateInput.error.message);
+    const issues = formatAuthFormError(validateInput.error.message);
 
-    const issues = {};
-
-    errorDetails.forEach((errorDetail) => {
-      issues[errorDetail.path[0]] = errorDetail.message;
-    });
-
-    return data(issues, {
-      status: 400,
-    });
+    return data(
+      { issues },
+      {
+        status: 400,
+      },
+    );
   }
 
   //check if the email id exists
@@ -52,9 +57,7 @@ export async function action({ request }) {
   });
 }
 
-export default function SignupRoute() {
-  const actionData = useActionData<typeof action>();
-
+export default function SignupRoute({ actionData }: SignupComponentProps) {
   return (
     <div>
       <Form method="post" className="flex flex-col gap-5">
@@ -67,9 +70,9 @@ export default function SignupRoute() {
               placeholder={field.inputPlaceholder}
               className="input-box"
             />
-            <p className="form-error">
-              {actionData && actionData[field.inputName]}
-            </p>
+            {actionData ? (
+              <p className="form-error">{actionData[field.inputName]}</p>
+            ) : null}
           </label>
         ))}
         <button type="submit" className="btn-accent">
@@ -81,7 +84,9 @@ export default function SignupRoute() {
             login to an existing account
           </Link>
         </p>
-        {actionData?.existingUser && <p>account already exists, login?</p>}
+        {actionData?.existingUser ? (
+          <p className="form-error">account already exists, login?</p>
+        ) : null}
       </Form>
     </div>
   );

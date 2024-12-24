@@ -1,5 +1,6 @@
 import { redirect } from "react-router";
 import { data, useActionData } from "react-router";
+import type { Route } from "./+types/_auth.login";
 import { Form, Link } from "react-router";
 import invariant from "tiny-invariant";
 import { userCookie } from "~/.server/cookies";
@@ -11,7 +12,15 @@ import {
 import { formatAuthFormError } from "~/utils/formatAuthFormError";
 import { loginSchema } from "~/utils/zodSchema";
 
-export async function action({ request }) {
+type ActionData = Record<string, string> & {
+  userNotFound?: string;
+};
+
+interface LoginComponentProps extends Route.ComponentProps {
+  actionData?: ActionData;
+}
+
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const body = {
@@ -65,9 +74,7 @@ export async function action({ request }) {
     headers: { "Set-Cookie": await userCookie.serialize(userId) },
   });
 }
-export default function LoginRoute() {
-  const actionData = useActionData<typeof action>();
-
+export default function LoginRoute({ actionData }: LoginComponentProps) {
   return (
     <Form method="post" className="flex flex-col gap-5">
       {formFields.map((field) => (
@@ -79,9 +86,9 @@ export default function LoginRoute() {
             placeholder={field.inputPlaceholder}
             className="input-box"
           />
-          <p className="form-error">
-            {actionData && actionData[field.inputName]}
-          </p>
+          {actionData ? (
+            <p className="form-error">{actionData[field.inputName]}</p>
+          ) : null}
         </label>
       ))}
       <button type="submit" className="btn-accent">
@@ -93,9 +100,11 @@ export default function LoginRoute() {
           create an account
         </Link>
       </p>
-      {actionData?.userNotFound && (
-        <p>Email or password incorrect, please try again</p>
-      )}
+      {actionData?.userNotFound ? (
+        <p className="form-error">
+          Email or password incorrect, please try again
+        </p>
+      ) : null}
     </Form>
   );
 }
