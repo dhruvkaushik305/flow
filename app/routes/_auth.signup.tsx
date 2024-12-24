@@ -1,4 +1,4 @@
-import { data, Form } from "react-router";
+import { data, Form, Link } from "react-router";
 // import type { Route } from "./+types/_auth.signup";
 import { useActionData } from "react-router";
 import { redirect } from "react-router";
@@ -42,7 +42,7 @@ export async function action({ request }) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
@@ -60,26 +60,29 @@ export default function SignupRoute() {
     <div>
       <Form method="post" className="flex flex-col gap-5">
         {formFields.map((field, index) => (
-          <label key={field.id} className="flex flex-col gap-1">
-            <h2 className="font-medium">{field.labelText}</h2>
+          <label key={field.id} className="space-y-1">
+            <h2 className="font-medium md:text-lg">{field.labelText}</h2>
             <input
               type={field.inputType}
               name={field.inputName}
               placeholder={field.inputPlaceholder}
-              className="rounded-lg border-2 border-zinc-300 p-2 focus:border-zinc-500 focus:outline-none"
+              className="input-box"
             />
-            <p>{actionData && actionData[field.inputName]}</p>
+            <p className="form-error">
+              {actionData && actionData[field.inputName]}
+            </p>
           </label>
         ))}
-        <button
-          type="submit"
-          className="rounded-md bg-accent-700 px-4 py-3 font-medium"
-        >
+        <button type="submit" className="btn-accent">
           Signup
         </button>
-        {actionData?.existingUser && (
-          <p>A user with this email already exists!</p>
-        )}
+        <p className="text-center text-sm">
+          or{" "}
+          <Link to="/login" className="italic text-blue-500 hover:underline">
+            login to an existing account
+          </Link>
+        </p>
+        {actionData?.existingUser && <p>account already exists, login?</p>}
       </Form>
     </div>
   );
@@ -105,6 +108,6 @@ const formFields = [
     labelText: "Password",
     inputType: "password",
     inputName: "password",
-    inputPlaceholder: "Password",
+    inputPlaceholder: "kodylovesyou",
   },
 ];
