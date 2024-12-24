@@ -3,7 +3,7 @@ import { data, Form, Link } from "react-router";
 import { useActionData } from "react-router";
 import { redirect } from "react-router";
 import { userCookie } from "~/.server/cookies";
-import { createNewUser, verifyEmailId } from "~/.server/models/user";
+import { checkEmailId, createNewUser } from "~/.server/models/user";
 import { signupSchema } from "~/utils/zodSchema";
 
 export async function action({ request }) {
@@ -32,10 +32,9 @@ export async function action({ request }) {
   }
 
   //check if the email id exists
-  const checkEmailId = await verifyEmailId(body.emailId);
+  const emailExists = await checkEmailId(body.emailId);
 
-  if (!checkEmailId) {
-    //this email is not safe, failed the email check
+  if (emailExists) {
     return data(
       {
         existingUser: true,

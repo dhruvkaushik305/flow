@@ -1,7 +1,70 @@
-import { useActionData } from "react-router";
+import { redirect } from "react-router";
+import { data, useActionData } from "react-router";
 import { Form, Link } from "react-router";
+import invariant from "tiny-invariant";
+import { userCookie } from "~/.server/cookies";
+import {
+  checkEmailId,
+  checkPassword,
+  fetchUserId,
+} from "~/.server/models/user";
+import { formatAuthFormError } from "~/utils/formatAuthFormError";
+import { loginSchema } from "~/utils/zodSchema";
 
-export async function action({ request }) {}
+export async function action({ request }) {
+  const formData = await request.formData();
+
+  const body = {
+    emailId: String(formData.get("emailId")),
+    password: String(formData.get("password")),
+  };
+
+  const validateInput = loginSchema.safeParse(body);
+
+  if (!validateInput.success) {
+    const issues = formatAuthFormError(validateInput.error.message);
+
+    return data(issues, {
+      status: 400,
+    });
+  }
+
+  //check if the email id does not exists
+  const emailExists = await checkEmailId(body.emailId);
+
+  if (!emailExists) {
+    return data(
+      {
+        userNotFound: true,
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  //check for password
+  const passwordCorrect = await checkPassword(body.emailId, body.password);
+
+  if (!passwordCorrect) {
+    return data(
+      {
+        userNotFound: true,
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+  //fetch userId
+  const userId = await fetchUserId(body.emailId);
+
+  invariant(userId, "Database did not return userId");
+
+  return redirect("/home", {
+    headers: { "Set-Cookie": await userCookie.serialize(userId) },
+  });
+}
 export default function LoginRoute() {
   const actionData = useActionData<typeof action>();
 
@@ -30,7 +93,7 @@ export default function LoginRoute() {
           create an account
         </Link>
       </p>
-      {actionData?.existingUser && (
+      {actionData?.userNotFound && (
         <p>Email or password incorrect, please try again</p>
       )}
     </Form>

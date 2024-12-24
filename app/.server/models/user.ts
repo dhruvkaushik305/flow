@@ -3,7 +3,7 @@ import prisma from "../db";
 import { userCookie } from "../cookies";
 import * as bcrypt from "bcrypt";
 
-export async function verifyEmailId(emailId: string) {
+export async function checkEmailId(emailId: string) {
   const existingUser = await prisma.user.findUnique({
     where: {
       emailId,
@@ -11,9 +11,9 @@ export async function verifyEmailId(emailId: string) {
   });
 
   if (existingUser) {
-    return false; //signifies that the verify check failed, this email is not allowed
-  } else {
     return true;
+  } else {
+    return false;
   }
 }
 
@@ -49,4 +49,39 @@ export async function createNewUser(userData: NewUserType) {
   });
 
   return newUser.id;
+}
+
+export async function checkPassword(emailId: string, userPassword: string) {
+  const foundPassword = await prisma.user.findUnique({
+    where: {
+      emailId,
+    },
+    select: {
+      password: true,
+    },
+  });
+
+  if (!foundPassword) {
+    return false;
+  }
+
+  const passwordsMatched = await bcrypt.compare(
+    userPassword,
+    foundPassword.password,
+  );
+
+  return passwordsMatched;
+}
+
+export async function fetchUserId(emailId: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      emailId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return user?.id;
 }

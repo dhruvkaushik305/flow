@@ -2,6 +2,7 @@ import { createRequestHandler } from "@react-router/express";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import "react-router";
+import { verifyUserId } from "~/.server/models/user";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -26,14 +27,25 @@ function getCookies(req: Request) {
   return cookiesJSON;
 }
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+async function checkUserId(userId: string | undefined) {
+  if (!userId) return false;
+
+  const userFound = await verifyUserId(userId);
+
+  if (userFound) return true;
+  else return false;
+}
+
+const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const cookies = getCookies(req);
 
   const incomingRoute = req.originalUrl;
 
-  const isAuthorized = cookies["userId"] || false;
-
-  // console.log("authorization status", isAuthorized);
+  const isAuthorized = await checkUserId(cookies["userId"]);
 
   if (isAuthorized) {
     //don't show the login and signup page
@@ -61,7 +73,7 @@ app.use(
         VALUE_FROM_VERCEL: "Hello from Vercel",
       };
     },
-  })
+  }),
 );
 
 export default app;
