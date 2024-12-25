@@ -10,7 +10,15 @@
     @apply w-full rounded-lg border-2 border-zinc-300 p-2 text-gray-600 focus:border-zinc-400 focus:outline-none;
   }
   .form-error {
-    @apply text-sm italic text-red-500;
+    @apply font-medium italic text-red-500;
+  }
+
+  .form-label {
+    @apply space-y-1;
+  }
+
+  .form-label-text {
+    @apply font-medium md:text-lg;
   }
 }
 /* html,

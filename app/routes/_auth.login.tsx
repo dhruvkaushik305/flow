@@ -4,11 +4,7 @@ import type { Route } from "./+types/_auth.login";
 import { Form, Link } from "react-router";
 import invariant from "tiny-invariant";
 import { userCookie } from "~/.server/cookies";
-import {
-  checkEmailId,
-  checkPassword,
-  fetchUserId,
-} from "~/.server/models/user";
+import { checkEmail, checkPassword, fetchUserId } from "~/.server/models/user";
 import { formatAuthFormError } from "~/utils/formatAuthFormError";
 import { loginSchema } from "~/utils/zodSchema";
 
@@ -24,7 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const body = {
-    emailId: String(formData.get("emailId")),
+    email: String(formData.get("email")),
     password: String(formData.get("password")),
   };
 
@@ -38,8 +34,8 @@ export async function action({ request }: Route.ActionArgs) {
     });
   }
 
-  //check if the email id does not exists
-  const emailExists = await checkEmailId(body.emailId);
+  //check if the email does not exists
+  const emailExists = await checkEmail(body.email);
 
   if (!emailExists) {
     return data(
@@ -53,7 +49,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   //check for password
-  const passwordCorrect = await checkPassword(body.emailId, body.password);
+  const passwordCorrect = await checkPassword(body.email, body.password);
 
   if (!passwordCorrect) {
     return data(
@@ -65,8 +61,9 @@ export async function action({ request }: Route.ActionArgs) {
       },
     );
   }
+
   //fetch userId
-  const userId = await fetchUserId(body.emailId);
+  const userId = await fetchUserId(body.email);
 
   invariant(userId, "Database did not return userId");
 
@@ -74,12 +71,16 @@ export async function action({ request }: Route.ActionArgs) {
     headers: { "Set-Cookie": await userCookie.serialize(userId) },
   });
 }
+
 export default function LoginRoute({ actionData }: LoginComponentProps) {
   return (
     <Form method="post" className="flex flex-col gap-5">
       {formFields.map((field) => (
-        <label key={field.id} className="space-y-1">
-          <h2 className="font-medium md:text-lg">{field.labelText}</h2>
+        <label key={field.id} className="form-label">
+          <h2 className="form-label-text">
+            {field.inputName.charAt(0).toUpperCase() + field.inputName.slice(1)}
+            {/* converts the name to Title Case */}
+          </h2>
           <input
             type={field.inputType}
             name={field.inputName}
@@ -112,14 +113,12 @@ export default function LoginRoute({ actionData }: LoginComponentProps) {
 const formFields = [
   {
     id: 1,
-    labelText: "Email",
     inputType: "text",
-    inputName: "emailId",
+    inputName: "email",
     inputPlaceholder: "kody@remix.run",
   },
   {
     id: 2,
-    labelText: "Password",
     inputType: "password",
     inputName: "password",
     inputPlaceholder: "kodylovesyou",

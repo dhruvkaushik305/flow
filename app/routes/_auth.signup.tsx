@@ -2,7 +2,7 @@ import { data, Form, Link } from "react-router";
 import type { Route } from "./+types/_auth.signup";
 import { redirect } from "react-router";
 import { userCookie } from "~/.server/cookies";
-import { checkEmailId, createNewUser } from "~/.server/models/user";
+import { checkEmail, createNewUser } from "~/.server/models/user";
 import { formatAuthFormError } from "~/utils/formatAuthFormError";
 import { signupSchema } from "~/utils/zodSchema";
 
@@ -19,7 +19,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   const body = {
     name: String(formData.get("name")),
-    emailId: String(formData.get("emailId")),
+    email: String(formData.get("email")),
     password: String(formData.get("password")),
   };
 
@@ -28,16 +28,13 @@ export async function action({ request }: Route.ActionArgs) {
   if (!validateInput.success) {
     const issues = formatAuthFormError(validateInput.error.message);
 
-    return data(
-      { issues },
-      {
-        status: 400,
-      },
-    );
+    return data(issues, {
+      status: 400,
+    });
   }
 
   //check if the email id exists
-  const emailExists = await checkEmailId(body.emailId);
+  const emailExists = await checkEmail(body.email);
 
   if (emailExists) {
     return data(
@@ -50,10 +47,12 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  const newUserId = await createNewUser(body);
+  const userId = await createNewUser(body);
 
   return redirect("/home", {
-    headers: { "Set-Cookie": await userCookie.serialize(newUserId) },
+    headers: {
+      "Set-Cookie": await userCookie.serialize(userId),
+    },
   });
 }
 
@@ -62,8 +61,12 @@ export default function SignupRoute({ actionData }: SignupComponentProps) {
     <div>
       <Form method="post" className="flex flex-col gap-5">
         {formFields.map((field, index) => (
-          <label key={field.id} className="space-y-1">
-            <h2 className="font-medium md:text-lg">{field.labelText}</h2>
+          <label key={field.id} className="form-label">
+            <h2 className="form-label-text">
+              {field.inputName.charAt(0).toUpperCase() +
+                field.inputName.slice(1)}
+              {/* converts the name to Title Case */}
+            </h2>
             <input
               type={field.inputType}
               name={field.inputName}
@@ -95,21 +98,18 @@ export default function SignupRoute({ actionData }: SignupComponentProps) {
 const formFields = [
   {
     id: 1,
-    labelText: "Name",
     inputType: "text",
     inputName: "name",
     inputPlaceholder: "Kody",
   },
   {
     id: 2,
-    labelText: "Email",
-    inputType: "email",
-    inputName: "emailId",
+    inputType: "text",
+    inputName: "email",
     inputPlaceholder: "kody@remix.run",
   },
   {
     id: 3,
-    labelText: "Password",
     inputType: "password",
     inputName: "password",
     inputPlaceholder: "kodylovesyou",

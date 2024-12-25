@@ -2,11 +2,12 @@ import type { NewUserType } from "~/utils/zodSchema";
 import prisma from "../db";
 import { userCookie } from "../cookies";
 import * as bcrypt from "bcrypt";
+import invariant from "tiny-invariant";
 
-export async function checkEmailId(emailId: string) {
+export async function checkEmail(email: string) {
   const existingUser = await prisma.user.findUnique({
     where: {
-      emailId,
+      email,
     },
   });
 
@@ -18,7 +19,10 @@ export async function checkEmailId(emailId: string) {
 }
 
 export async function verifyUserId(hashedUserId: string) {
-  const userId = await userCookie.parse(hashedUserId);
+  const userId: string | null = await userCookie.parse(
+    `userId=${hashedUserId}`,
+  );
+  invariant(userId, "Decrypted user id cannot be null");
 
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -39,7 +43,7 @@ export async function createNewUser(userData: NewUserType) {
   const newUser = await prisma.user.create({
     data: {
       name: userData.name,
-      emailId: userData.emailId,
+      email: userData.email,
       password: hashedPassword,
       joinedAt: new Date().toISOString(),
     },
@@ -51,10 +55,10 @@ export async function createNewUser(userData: NewUserType) {
   return newUser.id;
 }
 
-export async function checkPassword(emailId: string, userPassword: string) {
+export async function checkPassword(email: string, userPassword: string) {
   const foundPassword = await prisma.user.findUnique({
     where: {
-      emailId,
+      email,
     },
     select: {
       password: true,
@@ -73,10 +77,10 @@ export async function checkPassword(emailId: string, userPassword: string) {
   return passwordsMatched;
 }
 
-export async function fetchUserId(emailId: string) {
+export async function fetchUserId(email: string) {
   const user = await prisma.user.findUnique({
     where: {
-      emailId,
+      email,
     },
     select: {
       id: true,

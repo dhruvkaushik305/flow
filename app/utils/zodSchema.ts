@@ -9,14 +9,14 @@ export const signupSchema = z.object({
   name: z
     .string()
     .min(3, { message: "Name must be atleast 3 characters long" }),
-  emailId: emailSchema,
+  email: emailSchema,
   password: passwordSchema,
 });
 
 export type NewUserType = z.infer<typeof signupSchema>;
 
 export const loginSchema = z.object({
-  emailId: emailSchema,
+  email: emailSchema,
   password: passwordSchema,
 });
 
