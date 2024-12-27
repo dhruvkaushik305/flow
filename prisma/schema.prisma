@@ -8,9 +8,39 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  name     String
-  email    String   @unique
-  password String
-  joinedAt DateTime
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  joinedAt  DateTime
+  todos     Todo[]
+  activity  Activity[]
+  following Follow[]   @relation("Following")
+  followers Follow[]   @relation("Followers")
+}
+
+model Todo {
+  id          String   @id @default(uuid())
+  title       String
+  completed   Boolean
+  userId      String
+  dateCreated DateTime
+  User        User     @relation(fields: [userId], references: [id])
+}
+
+model Activity {
+  id            String   @id @default(uuid())
+  completedTodo Int
+  timeStudied   Int
+  userId        String
+  dateTime      DateTime
+  User          User     @relation(fields: [userId], references: [id])
+}
+
+model Follow {
+  id          String @id @default(uuid())
+  followerId  String
+  followingId String
+  Follower    User   @relation("Followers", fields: [followerId], references: [id])
+  Following   User   @relation("Following", fields: [followingId], references: [id])
 }
