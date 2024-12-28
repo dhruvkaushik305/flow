@@ -89,3 +89,16 @@ export async function fetchUserId(email: string) {
 
   return user?.id;
 }
+
+export async function fetchUserName(id: string){
+  const user = await prisma.user.findUnique({
+    where: {
+      id
+    },
+    select: {
+      name: true
+    }
+  });
+
+  return user?.name;
+}

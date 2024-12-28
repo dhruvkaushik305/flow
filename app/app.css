@@ -20,6 +20,10 @@
   .form-label-text {
     @apply font-medium md:text-lg;
   }
+
+  .navlink-active {
+    @apply border-b border-gray-700 font-medium
+  }
 }
 /* html,
 body {
