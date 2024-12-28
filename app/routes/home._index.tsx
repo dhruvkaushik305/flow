@@ -1,10 +1,15 @@
 import { userCookie } from "~/.server/cookies";
 import type { Route } from "../+types/root";
 import invariant from "tiny-invariant";
-import { getTodosById } from "~/.server/models/todo";
-import { data, useFetcher, useLoaderData } from "react-router";
+import { createTodo, getTodosById } from "~/.server/models/todo";
+import {
+  data,
+  useFetcher,
+  useLoaderData,
+  type FetcherWithComponents,
+} from "react-router";
 import { fetchUserName } from "~/.server/models/user";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -23,6 +28,33 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data({ userName, todos }, { status: 200 });
 }
 
+export async function action({ request }: Route.ActionArgs) {
+  console.log("action invoked");
+  const formData = await request.formData();
+
+  const userId: string | null = await userCookie.parse(
+    request.headers.get("Cookie"),
+  );
+
+  invariant(userId, "User id cannot be null");
+
+  const intent = formData.get("intent");
+
+  switch (intent) {
+    case "createTodo":
+      const newTodoTitle = formData.get("newTodoTitle");
+
+      if (!newTodoTitle || newTodoTitle === "") {
+        console.log("empty title");
+        return;
+      }
+
+      await createTodo(userId, String(newTodoTitle));
+    default:
+      return;
+  }
+}
+
 export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
@@ -30,13 +62,33 @@ export default function HomePage() {
   return (
     <section className="mx-auto h-full max-w-7xl bg-red-50">
       <RenderHeader userName={userName} />
-      <fetcher.Form method="post">
-        <input type="text" name="newTodo" />
-      </fetcher.Form>
+      <CreateTodo />
       {todos.map((todo) => (
         <RenderTodo key={todo.id} todo={todo} />
       ))}
     </section>
+  );
+}
+
+function CreateTodo() {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const createFetcher = useFetcher();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    await createFetcher.submit(event.currentTarget.form);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <createFetcher.Form method="post" onSubmit={handleSubmit}>
+      <input type="text" name="newTodoTitle" ref={inputRef} />
+      <button name="intent" value="createTodo">
+        Add
+      </button>
+    </createFetcher.Form>
   );
 }
 
