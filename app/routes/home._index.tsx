@@ -35,7 +35,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  console.log("action invoked");
   const formData = await request.formData();
 
   const userId: string | null = await userCookie.parse(
@@ -45,29 +44,29 @@ export async function action({ request }: Route.ActionArgs) {
   invariant(userId, "User id cannot be null");
 
   const intent = formData.get("intent");
-  console.log("intent is", intent);
+
   if (intent == "createTodo") {
-    const newTodoTitle = String(formData.get("newTodoTitle"));
+    const newTodoTitle = formData.get("newTodoTitle");
 
-    if (!newTodoTitle || newTodoTitle === "") return;
+    if (!newTodoTitle || String(newTodoTitle) === "") return;
 
-    await createTodo(userId, newTodoTitle);
+    await createTodo(userId, String(newTodoTitle));
   } else if (intent == "toggleTodo") {
-    const todoId = String(formData.get("todoId"));
+    const todoId = formData.get("todoId");
 
     const newState = formData.get("completed") === "true";
 
-    if (!todoId || !newState) return;
+    if (!todoId) return;
 
-    await toggleTodo(todoId, newState);
+    await toggleTodo(String(todoId), newState);
   } else if (intent == "updateTodo") {
     const todoId = String(formData.get("todoId"));
 
-    const newTitle = String(formData.get("newTitle"));
+    const newTitle = formData.get("newTitle");
 
-    if (!todoId || !newTitle || newTitle === "") return;
+    if (!todoId || !newTitle || String(newTitle) === "") return;
 
-    await updateTodo(todoId, newTitle);
+    await updateTodo(todoId, String(newTitle));
   } else if (intent == "deleteTodo") {
     const todoId = formData.get("todoId");
 
@@ -198,6 +197,8 @@ function RenderTodo({ todo }: RenderTodoProps) {
   const handleToggleTodo = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    event.preventDefault();
+
     const formData = new FormData();
 
     formData.append("todoId", todo.id);
@@ -208,6 +209,8 @@ function RenderTodo({ todo }: RenderTodoProps) {
   };
 
   const handleUpdateTodo = async (event: React.FocusEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     const formData = new FormData(event.currentTarget);
 
     formData.append("todoId", todo.id);
