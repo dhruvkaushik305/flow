@@ -62,3 +62,16 @@ export async function updateTodo(todoId: string, newTitle: string){
 
     return updatedTodo.id;
 }
+
+export async function deleteTodo(todoId: string){
+    const deletedTodo = await prisma.todo.delete({
+        where:{
+            id: todoId
+        },
+        select:{
+            id: true
+        }
+    });
+
+    return deletedTodo.id;
+}

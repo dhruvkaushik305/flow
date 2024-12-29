@@ -3,6 +3,7 @@ import type { Route } from "../+types/root";
 import invariant from "tiny-invariant";
 import {
   createTodo,
+  deleteTodo,
   getTodosById,
   toggleTodo,
   updateTodo,
@@ -35,7 +36,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   console.log("action invoked");
-
   const formData = await request.formData();
 
   const userId: string | null = await userCookie.parse(
@@ -45,20 +45,16 @@ export async function action({ request }: Route.ActionArgs) {
   invariant(userId, "User id cannot be null");
 
   const intent = formData.get("intent");
-
   console.log("intent is", intent);
-
   if (intent == "createTodo") {
     const newTodoTitle = String(formData.get("newTodoTitle"));
 
-    if (!newTodoTitle || newTodoTitle === "") {
-      console.log("empty title");
-      return;
-    }
+    if (!newTodoTitle || newTodoTitle === "") return;
 
     await createTodo(userId, newTodoTitle);
   } else if (intent == "toggleTodo") {
     const todoId = String(formData.get("todoId"));
+
     const newState = formData.get("completed") === "true";
 
     if (!todoId || !newState) return;
@@ -66,17 +62,23 @@ export async function action({ request }: Route.ActionArgs) {
     await toggleTodo(todoId, newState);
   } else if (intent == "updateTodo") {
     const todoId = String(formData.get("todoId"));
+
     const newTitle = String(formData.get("newTitle"));
 
     if (!todoId || !newTitle || newTitle === "") return;
 
     await updateTodo(todoId, newTitle);
+  } else if (intent == "deleteTodo") {
+    const todoId = formData.get("todoId");
+
+    if (!todoId) return;
+
+    await deleteTodo(String(todoId));
   }
 }
 
 export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
 
   return (
     <section className="mx-auto h-full max-w-7xl bg-red-50">
@@ -214,6 +216,17 @@ function RenderTodo({ todo }: RenderTodoProps) {
     await updateFetcher.submit(formData, { method: "POST" });
   };
 
+  const handleDeleteTodo = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+
+    formData.set("todoId", todo.id);
+    formData.set("intent", "deleteTodo");
+
+    await deleteFetcher.submit(formData, { method: "POST" });
+  };
+
   return (
     <div>
       <toggleFetcher.Form>
@@ -224,11 +237,11 @@ function RenderTodo({ todo }: RenderTodoProps) {
           onChange={handleToggleTodo}
         />
       </toggleFetcher.Form>
-      <updateFetcher.Form method="POST" onBlur={handleUpdateTodo}>
+      <updateFetcher.Form onBlur={handleUpdateTodo}>
         <input defaultValue={todo.title} name="newTitle" />
       </updateFetcher.Form>
-      <deleteFetcher.Form method="POST">
-        <button>
+      <deleteFetcher.Form onSubmit={handleDeleteTodo}>
+        <button type="submit">
           <Trash />
         </button>
       </deleteFetcher.Form>
