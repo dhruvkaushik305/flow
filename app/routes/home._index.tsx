@@ -1,7 +1,7 @@
 import { userCookie } from "~/.server/cookies";
 import type { Route } from "../+types/root";
 import invariant from "tiny-invariant";
-import { createTodo, getTodosById } from "~/.server/models/todo";
+import { createTodo, getTodosById, toggleTodo } from "~/.server/models/todo";
 import {
   data,
   useFetcher,
@@ -10,7 +10,7 @@ import {
 } from "react-router";
 import { fetchUserName } from "~/.server/models/user";
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play, RotateCcw, Trash } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId: string | null = await userCookie.parse(
@@ -30,6 +30,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   console.log("action invoked");
+
   const formData = await request.formData();
 
   const userId: string | null = await userCookie.parse(
@@ -40,16 +41,27 @@ export async function action({ request }: Route.ActionArgs) {
 
   const intent = formData.get("intent");
 
+  console.log("intent is", intent);
+
   switch (intent) {
     case "createTodo":
-      const newTodoTitle = formData.get("newTodoTitle");
+      const newTodoTitle = String(formData.get("newTodoTitle"));
 
       if (!newTodoTitle || newTodoTitle === "") {
         console.log("empty title");
         return;
       }
 
-      await createTodo(userId, String(newTodoTitle));
+      await createTodo(userId, newTodoTitle);
+
+    case "toggleTodo":
+      const todoId = String(formData.get("todoId"));
+      const newState = formData.get("completed") === "true";
+
+      if (!todoId || !newState) return;
+
+      await toggleTodo(todoId, newState);
+
     default:
       return;
   }
@@ -170,10 +182,40 @@ interface RenderTodoProps {
 }
 
 function RenderTodo({ todo }: RenderTodoProps) {
+  const toggleFetcher = useFetcher();
+  const updateFetcher = useFetcher();
+  const deleteFetcher = useFetcher();
+
+  const handleToggleTodo = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const formData = new FormData();
+
+    formData.append("todoId", todo.id);
+    formData.append("intent", "toggleTodo");
+    formData.append("completed", event.target.checked ? "true" : "false");
+
+    await toggleFetcher.submit(formData, { method: "POST" });
+  };
+
   return (
     <div>
-      <input type="checkbox" checked={todo.completed} />
-      <span>{todo.title}</span>
+      <toggleFetcher.Form>
+        <input
+          type="checkbox"
+          checked={todo.completed}
+          name="completed"
+          onChange={handleToggleTodo}
+        />
+      </toggleFetcher.Form>
+      <updateFetcher.Form method="POST">
+        <input value={todo.title} />
+      </updateFetcher.Form>
+      <deleteFetcher.Form method="POST">
+        <button>
+          <Trash />
+        </button>
+      </deleteFetcher.Form>
     </div>
   );
 }

@@ -22,8 +22,27 @@ export async function createTodo(userId: string, title: string){
             userId,
             completed: false,
             dateCreated: new Date().toISOString()
+        },
+        select:{
+            id: true
         }
     });
 
     return newTodo.id
+}
+
+export async function toggleTodo(todoId: string, newState: boolean){
+    const updateTodo = await prisma.todo.update({
+        where:{
+            id: todoId
+        },
+        data:{
+            completed: newState
+        },
+        select: {
+            id: true
+        }
+    });
+
+    return updateTodo.id
 }
