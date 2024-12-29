@@ -32,7 +32,7 @@ export async function createTodo(userId: string, title: string){
 }
 
 export async function toggleTodo(todoId: string, newState: boolean){
-    const updateTodo = await prisma.todo.update({
+    const toggledTodo = await prisma.todo.update({
         where:{
             id: todoId
         },
@@ -44,5 +44,21 @@ export async function toggleTodo(todoId: string, newState: boolean){
         }
     });
 
-    return updateTodo.id
+    return toggledTodo.id
+}
+
+export async function updateTodo(todoId: string, newTitle: string){
+    const updatedTodo = await prisma.todo.update({
+        where:{
+            id: todoId,
+        },
+        data:{
+            title: newTitle
+        },
+        select:{
+            id: true
+        }
+    });
+
+    return updatedTodo.id;
 }

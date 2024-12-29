@@ -1,7 +1,12 @@
 import { userCookie } from "~/.server/cookies";
 import type { Route } from "../+types/root";
 import invariant from "tiny-invariant";
-import { createTodo, getTodosById, toggleTodo } from "~/.server/models/todo";
+import {
+  createTodo,
+  getTodosById,
+  toggleTodo,
+  updateTodo,
+} from "~/.server/models/todo";
 import {
   data,
   useFetcher,
@@ -43,27 +48,29 @@ export async function action({ request }: Route.ActionArgs) {
 
   console.log("intent is", intent);
 
-  switch (intent) {
-    case "createTodo":
-      const newTodoTitle = String(formData.get("newTodoTitle"));
+  if (intent == "createTodo") {
+    const newTodoTitle = String(formData.get("newTodoTitle"));
 
-      if (!newTodoTitle || newTodoTitle === "") {
-        console.log("empty title");
-        return;
-      }
-
-      await createTodo(userId, newTodoTitle);
-
-    case "toggleTodo":
-      const todoId = String(formData.get("todoId"));
-      const newState = formData.get("completed") === "true";
-
-      if (!todoId || !newState) return;
-
-      await toggleTodo(todoId, newState);
-
-    default:
+    if (!newTodoTitle || newTodoTitle === "") {
+      console.log("empty title");
       return;
+    }
+
+    await createTodo(userId, newTodoTitle);
+  } else if (intent == "toggleTodo") {
+    const todoId = String(formData.get("todoId"));
+    const newState = formData.get("completed") === "true";
+
+    if (!todoId || !newState) return;
+
+    await toggleTodo(todoId, newState);
+  } else if (intent == "updateTodo") {
+    const todoId = String(formData.get("todoId"));
+    const newTitle = String(formData.get("newTitle"));
+
+    if (!todoId || !newTitle || newTitle === "") return;
+
+    await updateTodo(todoId, newTitle);
   }
 }
 
@@ -198,6 +205,15 @@ function RenderTodo({ todo }: RenderTodoProps) {
     await toggleFetcher.submit(formData, { method: "POST" });
   };
 
+  const handleUpdateTodo = async (event: React.FocusEvent<HTMLFormElement>) => {
+    const formData = new FormData(event.currentTarget);
+
+    formData.append("todoId", todo.id);
+    formData.append("intent", "updateTodo");
+
+    await updateFetcher.submit(formData, { method: "POST" });
+  };
+
   return (
     <div>
       <toggleFetcher.Form>
@@ -208,8 +224,8 @@ function RenderTodo({ todo }: RenderTodoProps) {
           onChange={handleToggleTodo}
         />
       </toggleFetcher.Form>
-      <updateFetcher.Form method="POST">
-        <input value={todo.title} />
+      <updateFetcher.Form method="POST" onBlur={handleUpdateTodo}>
+        <input defaultValue={todo.title} name="newTitle" />
       </updateFetcher.Form>
       <deleteFetcher.Form method="POST">
         <button>
