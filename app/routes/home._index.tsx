@@ -80,7 +80,7 @@ export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
 
   return (
-    <section className="mx-auto h-full max-w-7xl bg-red-50">
+    <section className="mx-auto h-full max-w-7xl">
       <RenderHeader userName={userName} />
       <CreateTodo />
       {todos.map((todo) => (
@@ -118,8 +118,10 @@ interface RenderHeaderProps {
 
 function RenderHeader({ userName }: RenderHeaderProps) {
   return (
-    <header className="rounded-md bg-red-100 p-5 text-3xl font-semibold">
-      Hi {userName},
+    <header className="flex flex-wrap items-center justify-around space-y-5 rounded-xl p-5 shadow-md">
+      <h1 className="text-2xl font-semibold md:text-3xl">
+        Hi <span className="italic">{userName}</span>,
+      </h1>
       <RenderStopWatch />
     </header>
   );
@@ -145,7 +147,7 @@ function RenderStopWatch() {
         clearInterval(interval);
       }
     };
-  }, [isRunning]);
+  }, [isRunning, time]);
 
   const handlePause = () => {
     setIsRunning(false);
@@ -161,20 +163,20 @@ function RenderStopWatch() {
   };
 
   return (
-    <div>
+    <div className="flex w-full max-w-sm items-center justify-around rounded-md bg-primary-500 p-1 text-white shadow-lg md:p-3">
       {!isRunning && time > 0 ? (
         <button>
           <RotateCcw onClick={handleReset} />
         </button>
       ) : null}
-      <p>
+      <p className="text-2xl md:text-3xl">
         {Math.floor(time / 3600)}:{Math.floor((time % 3600) / 60)}:{time % 60}
       </p>
       <button>
         {isRunning ? (
           <Pause onClick={handlePause} />
         ) : (
-          <Play onClick={handlePlay} />
+          <Play onClick={handlePlay} className="w-7" />
         )}
       </button>
     </div>
