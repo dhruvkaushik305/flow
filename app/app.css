@@ -6,9 +6,14 @@
   .btn-accent {
     @apply rounded-lg bg-secondary-300 px-4 py-3 font-medium text-white md:text-lg;
   }
+  
+  .btn-outline-primary {
+    @apply shadow-inner border-2 border-primary-500 rounded-lg px-4 py-3 font-medium md:text-lg;
+  }
   .input-box {
     @apply w-full rounded-lg border-2 border-zinc-300 p-2 text-gray-600 focus:border-zinc-400 focus:outline-none;
   }
+
   .form-error {
     @apply font-medium italic text-red-500;
   }

@@ -80,7 +80,7 @@ export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
 
   return (
-    <section className="mx-auto h-full max-w-7xl">
+    <section className="mx-auto h-full max-w-7xl space-y-8">
       <RenderHeader userName={userName} />
       <CreateTodo />
       {todos.map((todo) => (
@@ -103,9 +103,23 @@ function CreateTodo() {
   };
 
   return (
-    <createFetcher.Form method="post" onSubmit={handleSubmit}>
-      <input type="text" name="newTodoTitle" ref={inputRef} />
-      <button name="intent" value="createTodo">
+    <createFetcher.Form
+      method="post"
+      onSubmit={handleSubmit}
+      className="flex gap-2 p-2 md:gap-5"
+    >
+      <input
+        type="text"
+        name="newTodoTitle"
+        ref={inputRef}
+        placeholder="What do you want to do?"
+        className="input-box p-1 md:p-2"
+      />
+      <button
+        name="intent"
+        value="createTodo"
+        className="btn-outline-primary md:px-7"
+      >
         Add
       </button>
     </createFetcher.Form>
