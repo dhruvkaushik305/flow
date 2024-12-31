@@ -16,7 +16,7 @@ import {
 } from "react-router";
 import { fetchUserName } from "~/.server/models/user";
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, Trash } from "lucide-react";
+import { CirclePlus, Pause, Play, Plus, RotateCcw, Trash } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId: string | null = await userCookie.parse(
@@ -80,12 +80,14 @@ export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
 
   return (
-    <section className="mx-auto h-full max-w-7xl space-y-8">
+    <section className="mx-auto h-full max-w-7xl">
       <RenderHeader userName={userName} />
-      <CreateTodo />
-      {todos.map((todo) => (
-        <RenderTodo key={todo.id} todo={todo} />
-      ))}
+      <div className="mx-2 divide-y-2 divide-gray-100 rounded-lg border-4 border-primary-800 p-5 text-sm shadow-md md:text-lg">
+        <CreateTodo />
+        {todos.map((todo) => (
+          <RenderTodo key={todo.id} todo={todo} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -112,15 +114,11 @@ function CreateTodo() {
         type="text"
         name="newTodoTitle"
         ref={inputRef}
-        placeholder="What do you want to do?"
-        className="input-box p-1 md:p-2"
+        placeholder="Add a new task here"
+        className="w-full focus:outline-none"
       />
-      <button
-        name="intent"
-        value="createTodo"
-        className="btn-outline-primary md:px-7"
-      >
-        Add
+      <button name="intent" value="createTodo" className="">
+        <Plus className="size-4 md:size-5" />
       </button>
     </createFetcher.Form>
   );
@@ -132,7 +130,7 @@ interface RenderHeaderProps {
 
 function RenderHeader({ userName }: RenderHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center justify-around space-y-5 rounded-xl p-5 shadow-md">
+    <header className="mb-10 flex flex-wrap items-center justify-around space-y-5 rounded-xl p-5 shadow-md">
       <h1 className="text-2xl font-semibold md:text-3xl">
         Hi <span className="italic">{userName}</span>,
       </h1>
@@ -247,21 +245,26 @@ function RenderTodo({ todo }: RenderTodoProps) {
   };
 
   return (
-    <div>
+    <div className="flex w-full items-center gap-5 p-1 py-2">
       <toggleFetcher.Form>
         <input
           type="checkbox"
           checked={todo.completed}
           name="completed"
           onChange={handleToggleTodo}
+          className="size-4"
         />
       </toggleFetcher.Form>
-      <updateFetcher.Form onBlur={handleUpdateTodo}>
-        <input defaultValue={todo.title} name="newTitle" />
+      <updateFetcher.Form onBlur={handleUpdateTodo} className="w-full">
+        <input
+          defaultValue={todo.title}
+          name="newTitle"
+          className="w-full hover:cursor-text"
+        />
       </updateFetcher.Form>
       <deleteFetcher.Form onSubmit={handleDeleteTodo}>
         <button type="submit">
-          <Trash />
+          <Trash className="size-3 transition-colors duration-150 hover:text-red-600 md:size-4" />
         </button>
       </deleteFetcher.Form>
     </div>
