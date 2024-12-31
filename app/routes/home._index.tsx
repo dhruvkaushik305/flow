@@ -80,13 +80,16 @@ export default function HomePage() {
   const { userName, todos } = useLoaderData<typeof loader>();
 
   return (
-    <section className="mx-auto h-full max-w-7xl">
+    <section className="mx-auto flex h-full max-w-7xl flex-col">
       <RenderHeader userName={userName} />
-      <div className="mx-2 divide-y-2 divide-gray-100 rounded-lg border-4 border-primary-800 p-5 text-sm shadow-md md:text-lg">
-        <CreateTodo />
-        {todos.map((todo) => (
-          <RenderTodo key={todo.id} todo={todo} />
-        ))}
+      <div className="flex flex-grow flex-col items-center gap-5 p-2 pb-5 md:flex-row md:items-stretch">
+        <RenderStopWatch />
+        <div className="w-full flex-1 divide-y-2 divide-primary-900 rounded-lg border-4 border-primary-800 bg-primary-950 p-5 text-sm shadow-md md:text-lg">
+          <CreateTodo />
+          {todos.map((todo) => (
+            <RenderTodo key={todo.id} todo={todo} />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -115,7 +118,7 @@ function CreateTodo() {
         name="newTodoTitle"
         ref={inputRef}
         placeholder="Add a new task here"
-        className="w-full focus:outline-none"
+        className="w-full bg-transparent focus:outline-none"
       />
       <button name="intent" value="createTodo" className="">
         <Plus className="size-4 md:size-5" />
@@ -130,11 +133,10 @@ interface RenderHeaderProps {
 
 function RenderHeader({ userName }: RenderHeaderProps) {
   return (
-    <header className="mb-10 flex flex-wrap items-center justify-around space-y-5 rounded-xl p-5 shadow-md">
+    <header className="mb-5 rounded-xl p-5 shadow-sm md:mb-10">
       <h1 className="text-2xl font-semibold md:text-3xl">
-        Hi <span className="italic">{userName}</span>,
+        Hi <span className="underline underline-offset-2">{userName}</span> 👋🏻
       </h1>
-      <RenderStopWatch />
     </header>
   );
 }
@@ -142,6 +144,9 @@ function RenderHeader({ userName }: RenderHeaderProps) {
 function RenderStopWatch() {
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const hour = Math.floor(time / 3600);
+  const minute = Math.floor((time % 3600) / 60);
+  const second = time % 60;
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -175,22 +180,32 @@ function RenderStopWatch() {
   };
 
   return (
-    <div className="flex w-full max-w-sm items-center justify-around rounded-md bg-primary-500 p-1 text-white shadow-lg md:p-3">
-      {!isRunning && time > 0 ? (
-        <button>
-          <RotateCcw onClick={handleReset} />
-        </button>
-      ) : null}
-      <p className="text-2xl md:text-3xl">
-        {Math.floor(time / 3600)}:{Math.floor((time % 3600) / 60)}:{time % 60}
+    <div className="flex h-[8rem] w-full flex-col items-center justify-center gap-5 rounded-lg border-4 border-accent-700 bg-secondary-950/50 md:h-[15rem] md:w-[15rem] md:rounded-full">
+      <p className="flex gap-1 text-2xl md:text-3xl">
+        {hour > 0 && <span>{hour}h</span>}
+        {minute > 0 && <span>{minute}m</span>}
+        <span>{second}s</span>
       </p>
-      <button>
-        {isRunning ? (
-          <Pause onClick={handlePause} />
-        ) : (
-          <Play onClick={handlePlay} className="w-7" />
-        )}
-      </button>
+      <div className="flex flex-row items-center gap-2 md:flex-col">
+        <button>
+          {isRunning ? (
+            <button className="flex items-center gap-1">
+              {" "}
+              Pause <Pause onClick={handlePause} className="size-5" />
+            </button>
+          ) : (
+            <button className="flex items-center gap-1">
+              {time > 0 ? "Continue" : "Start"}{" "}
+              <Play onClick={handlePlay} className="size-5" />
+            </button>
+          )}
+        </button>
+        {!isRunning && time > 0 ? (
+          <button className="flex items-center gap-1">
+            Reset <RotateCcw onClick={handleReset} className="size-5" />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -259,7 +274,7 @@ function RenderTodo({ todo }: RenderTodoProps) {
         <input
           defaultValue={todo.title}
           name="newTitle"
-          className="w-full hover:cursor-text"
+          className="w-full bg-transparent hover:cursor-text"
         />
       </updateFetcher.Form>
       <deleteFetcher.Form onSubmit={handleDeleteTodo}>
